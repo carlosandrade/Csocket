@@ -31,6 +31,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 void itoa(int value, char* str, int base);
+void insertionSort(int v[], int tam);
 
 int main(int argc, char *argv[])
 {
@@ -107,14 +108,26 @@ int main(int argc, char *argv[])
     char convertor[100];
     
     int aux;
+/*    
     for(i=0;i<(numbytes/sizeof(int32_t));i++)
     {   aux  = (int)buf[i];
         itoa(aux,convertor,10);
         printf("%s\n",convertor);
     }
-        
+*/   
+    //Since I received the bucket, I'll do my job helping the server sorting this bucket for it.
+    //I'll run an insertionsort in place.
+    insertionSort(buf,numbytes/sizeof(int32_t));
       
 //    printf("client: received '%s'\n",buf);
+
+    for(i=0;i<(numbytes/sizeof(int32_t));i++)
+    {   aux  = (int)buf[i];
+        itoa(aux,convertor,10);
+        printf("%s\n",convertor);
+    }
+
+
 
     close(sockfd);
 
@@ -183,4 +196,22 @@ void itoa(int value, char* str, int base) {
 	
 	strreverse(str,wstr-1);
 	
+}
+
+void insertionSort(int32_t V[], int tam)
+{         
+        int i, j;
+        for(i = 1; i < tam; i++){
+                j = i;
+                while(V[j] < V[j - 1]) {
+ 
+                        int32_t aux = V[j];
+                        V[j] = V[j - 1];
+                        V[j - 1] = aux;
+                        j--;   
+ 
+                        if(j == 0)break;
+                }         
+        }
+        return;
 }
