@@ -1,4 +1,7 @@
-This code implements a distributed bucketsort.
+This code implements a distributed bucketsort using C socket API.
+
+
+General idea of code:
 
 1. Server starts requesting for number of H hosts to be connected to server using server.c.
 	1.1 Server loads random elements from an .txt file.
