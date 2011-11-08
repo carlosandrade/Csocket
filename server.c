@@ -201,7 +201,7 @@ int main(void)
 
     //All set, let the guy who is running me that I'm ready to wait for other hosts!
     printf("server: waiting for connections...\n");
-
+    int bucketShard = 0;
     //I accept all connections in this loop and deal with them1
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
@@ -214,6 +214,8 @@ int main(void)
         //(well there are better way to get things working around with sockets, check source of this code)
         
         new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+        
+        printf("The current shard being sent is the bucketshard[%d]\n",bucketShard);
         if (new_fd == -1) {
             perror("accept");
             continue;
@@ -233,21 +235,25 @@ int main(void)
 //            write(new_fd,&numElemenBucket[0],sizeof(numElemenBucket[0])); //Send amount of elements of this bucket
 
             int32_t bucketAux[300][16];
-            for(i=0; i<numElemenBucket[0]; i++)
-               bucketAux[0][i] = htonl((int32_t)(bucket[0][i]));
+            for(i=0; i<numElemenBucket[bucketShard]; i++)
+               bucketAux[bucketShard][i] = htonl((int32_t)(bucket[bucketShard][i]));
                
-            for(i=0; i<numElemenBucket[0]; i++)
-                printf("valor em int antes da conversao: %d\n",bucket[0][i]);
+            for(i=0; i<numElemenBucket[bucketShard]; i++)
+                printf("valor em int antes da conversao: %d\n",bucket[bucketShard][i]);
             
             //End of test of sending integers
             
             
-            if (send(new_fd,bucketAux[0],sizeof(int32_t)*numElemenBucket[0], 0) == -1)
+            if (send(new_fd,bucketAux[bucketShard],sizeof(int32_t)*numElemenBucket[bucketShard], 0) == -1)
                 perror("send");
             close(new_fd);
             exit(0);
         }
         close(new_fd);  // parent doesn't need this
+        
+        bucketShard++; //Everytime the master forks, it increases the bucket that will be sent
+        //Do notice that the max number of buckets is always the same amount of hosts that the server will wait 
+        //to receive a message. That way, each host always gets a bucket shard, nothing less and nothing more.
     }
 
     return 0;
