@@ -1,9 +1,10 @@
 This code implements a distributed bucketsort.
 
 1. Server starts requesting for number of H hosts to be connected to server using server.c.
-	1.1 Server uses a function to create H buckets, each of them will be sent to one of the hosts.
-	1.2 Server waits for each bucket connection.
-		Obs: Last time measurement output on server host includes only 1.1, it doesn't counts 1.2
+	1.1 Server loads random elements from an .txt file.
+	1.2 Server uses a function to create H buckets, each of them will be sent to one of the hosts.
+	1.3 Server waits for each bucket connection.
+		Obs: Last time measurement output on server host includes only 1.2, it doesn't counts neither 1.1 nor 1.3
 2. Client hosts start connection using client.c 
 	2.1 Client request bucket to server
 	2.2 Client waits for bucket 
@@ -31,7 +32,7 @@ Experimental Section--
 
 Although code has a lot of parts that requires improvements: e.g., Many casts are used, unnecessary loops, call for functions to maintain portability (local host to network and vice-versa), etc I've adapted the code to print the time outputs in case code gets improved for real measurement.
 
-Just for illustrative purposes, here are data obtained from few experimental tests:
+Just for illustrative purposes, here are data obtained from few experimental tests using a textfile (provided in this repository) that has 300 random elements generated from the RandomGenerator.java class (you will find it also at the bucketsort project that I mention below at my github):
 
 (Pay attention to input order from each terminal window)
 
@@ -127,4 +128,4 @@ http://dl.dropbox.com/u/6222648/bucketsort_threads_graph.png
 	
 [1] https://github.com/carlosandrade/bucketsort_threads/blob/master/BucketSort.java
 
-Again, you may be wondering why the performance on the C code is so much worse in this sample even the thread code being coded in Java. Not only both codes needs improvement (as they were not intended to be the best available solution by means of performance, but just an university assignment to learn threads and socket usage), but the afore mentioned itens for the distributed bucketsort might affect this as well. 
+Again, you may be asking yourself why the performance on the C code is so much worse in this sample even the thread code being coded in Java. Not only both codes needs improvement (as they were not intended to be the best available solution by means of performance, but just an university assignment to learn threads and socket usage), but the afore mentioned itens for the distributed bucketsort might affect this as well. 
