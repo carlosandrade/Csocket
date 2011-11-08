@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     //I mention about this function on the server code, it just make ip readable on 255.255.255.255 format.
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
             s, sizeof s);
-    printf("client: connecting to %s\n", s);
+    //printf("client: connecting to %s\n", s);
 
     freeaddrinfo(servinfo); // all done with this structure
 
@@ -109,13 +109,13 @@ int main(int argc, char *argv[])
     char convertor[100];
     
     int aux;
-    
+    /*
     for(i=0;i<(numbytes/sizeof(int32_t));i++)
     {   aux  = (int)buf[i];
         itoa(aux,convertor,10);
         printf("%s\n",convertor);
     }
-  
+  */
     //Since I received the bucket, I'll do my job helping the server sorting this bucket for it.
     //I'll run an insertionsort in place.
     insertionSort(buf,numbytes/sizeof(int32_t));
@@ -129,13 +129,13 @@ int main(int argc, char *argv[])
     }
 */
 
-    printf("ola2?\n");
+//    printf("ola2?\n");
 
 
     for(i=0;i<(numbytes/sizeof(int32_t));i++)
         buf[i] = htonl(buf[i]);
         
-    printf("ola?\n");
+    //printf("ola?\n");
 
     //Send the sorted bucket back to the server
   if (send(sockfd,buf,sizeof(int32_t)*(numbytes/sizeof(int32_t)), 0) == -1)

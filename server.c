@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     }
 
     //All set, let the guy who is running me that I'm ready to wait for other hosts!
-    printf("server: waiting for connections...\n");
+    //printf("server: waiting for connections...\n"); 
     int bucketShard = 0;
     //I accept all connections in this loop and deal with them1
     while(bucketShard<BACKLOG) {  // main accept() loop 
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
         
         new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
         
-        printf("The current shard being sent is the bucketshard[%d]\n",bucketShard);
+        //printf("The current shard being sent is the bucketshard[%d]\n",bucketShard);
         if (new_fd == -1) {
             perror("accept");
             continue;
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
         inet_ntop(their_addr.ss_family,
             get_in_addr((struct sockaddr *)&their_addr),
             s, sizeof s);
-        printf("server: got connection from %s\n", s);
+        //printf("server: got connection from %s\n", s);
 
         //As the server, the main process will keep listening, and the children process will deal with each host. 
         if (!fork()) { // this is the child process
@@ -280,18 +280,18 @@ int main(int argc, char *argv[])
                   bucketAux[bucketShard][i] = ntohl(bucketAux[bucketShard][i]);
             
             
-              printf("Im the server child process in charge of receiving the bucket shard %d.\n",bucketShard);
+              //printf("Im the server child process in charge of receiving the bucket shard %d.\n",bucketShard);
               
               char convertor[100];
 
               int aux;
-
+/*
               for(i=0;i<(numbytes/sizeof(int32_t));i++)
               {   aux  = (int)bucketAux[bucketShard][i];
                   itoa(aux,convertor,10);
                   printf("%s\n",convertor);
               }
-            
+ */           
                 
             close(new_fd);
             exit(0);
@@ -302,6 +302,7 @@ int main(int argc, char *argv[])
         //Do notice that the max number of buckets is always the same amount of hosts that the server will wait 
         //to receive a message. That way, each host always gets a bucket shard, nothing less and nothing more.
     }
+    //Parent process should not finish before children process received all the bucketsort data.
     int waitOnForkChildren = BACKLOG;
     while(waitOnForkChildren > 0)
     {
@@ -309,7 +310,7 @@ int main(int argc, char *argv[])
         waitOnForkChildren--;
     }
     
-    printf("fin\n");
+    //printf("fin\n");
 
     return 0;
 }
