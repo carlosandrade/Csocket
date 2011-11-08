@@ -21,7 +21,7 @@ The main idea is that the program reads an input of numbers from file
 
 #define PORT "3490"  // the port users will be connecting to
 
-#define BACKLOG 10     // how many pending connections queue will hold
+#define BACKLOG 2     // how many pending connections queue will hold
 
 void sigchld_handler(int s)
 {
@@ -203,7 +203,7 @@ int main(void)
     printf("server: waiting for connections...\n");
     int bucketShard = 0;
     //I accept all connections in this loop and deal with them1
-    while(1) {  // main accept() loop
+    while(bucketShard<BACKLOG) {  // main accept() loop 
         sin_size = sizeof their_addr;
         
         //Everytime I accept a connection, a new file description (remember! everything on C is a file descriptor)
