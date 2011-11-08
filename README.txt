@@ -131,4 +131,4 @@ http://dl.dropbox.com/u/6222648/bucketsort_threads_graph.png
 	
 [1] https://github.com/carlosandrade/bucketsort_threads/blob/master/BucketSort.java
 
-Again, you may be asking yourself why the performance on the C code is so much worse in this sample even the thread code being coded in Java. Not only both codes needs improvement (as they were not intended to be the best available solution by means of performance, but just an university assignment to learn threads and socket usage), but the afore mentioned itens for the distributed bucketsort might affect this as well. 
+Again, you may be asking yourself why the performance on the C code is so much worse in this sample even the thread code being in Java. Not only both codes needs improvement (as they were not intended to be the best available solution by means of performance, but just an university assignment to learn threads and socket usage), but the afore mentioned itens for the distributed bucketsort might affect this as well. 
