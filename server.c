@@ -236,8 +236,8 @@ int main(void)
             for(i=0; i<numElemenBucket[0]; i++)
                bucketAux[0][i] = htonl((int32_t)(bucket[0][i]));
                
-           // for(i=0; i<numElemenBucket[0]; i++)
-               // printf("valor em int32_t: %d\n",bucket[0][i]);
+            for(i=0; i<numElemenBucket[0]; i++)
+                printf("valor em int antes da conversao: %d\n",bucket[0][i]);
             
             //End of test of sending integers
             
