@@ -21,6 +21,20 @@
 // get sockaddr, IPv4 or IPv6:
 
 
+void init_time(struct timeval *start_time) {
+//time_t start_time;    
+gettimeofday(start_time, NULL);
+}
+
+long long int get_time(struct timeval start_time) {
+struct timeval t;
+gettimeofday(&t, NULL);
+return (long long int) (t.tv_sec - start_time.tv_sec) * 1000000
++ (t.tv_usec - 
+start_time.tv_usec);
+}
+
+
 void *get_in_addr(struct sockaddr *sa)
 {
     if (sa->sa_family == AF_INET) {
@@ -42,10 +56,22 @@ int main(int argc, char *argv[])
     int rv;
     char s[INET6_ADDRSTRLEN];
 
+    //For time measurement
+    struct timeval start_time;
+      init_time(&start_time);
+
+      //time
+      int long long start,end;
+
+
     if (argc != 2) {
         fprintf(stderr,"usage: client hostname\n");
         exit(1);
     }
+    
+    start = get_time(start_time);   
+    
+    
 
     //Make sure everything is clear inside hints
     memset(&hints, 0, sizeof hints);
@@ -143,6 +169,11 @@ int main(int argc, char *argv[])
 
 
     close(sockfd);
+    
+    end = get_time(start_time);   
+
+    //sizeofmybucket,time in miliseconds
+            printf("\t%d\t%f\n",(int)sizeof(int32_t)*(int)(numbytes/sizeof(int32_t)),(float)(end-start)/1000);
 
     return 0;
 }
