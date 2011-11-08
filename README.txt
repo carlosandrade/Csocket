@@ -35,6 +35,8 @@ Just for illustrative purposes, here are data obtained from few experimental tes
 
 (Pay attention to input order from each terminal window)
 
+Server: Running on MACINTOSH
+
 undine:Csocket carlosviansi$ ./server 2
 	pid	time_in_ms
 	0	13.790000
@@ -79,7 +81,7 @@ undine:Csocket carlosviansi$ ./server 2
 	2	300	1.135000
 
 
-Host 1 (Another terminal tab -- I'm sore I don't own a lanhouse)
+Host 1 (Another terminal tab from the macintosh acting as a server -- I'm sorry I don't own a lanhouse)
 
 undine:Csocket carlosviansi$ ./client localhost
 	n_elem	time_in_ms
