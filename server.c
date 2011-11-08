@@ -1,0 +1,175 @@
+/*
+** server.c -- a stream socket server demo
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/wait.h>
+#include <signal.h>
+
+#define PORT "3490"  // the port users will be connecting to
+
+#define BACKLOG 10     // how many pending connections queue will hold
+
+void sigchld_handler(int s)
+{
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+// get sockaddr, IPv4 or IPv6:
+void *get_in_addr(struct sockaddr *sa)
+{
+    if (sa->sa_family == AF_INET) {
+        return &(((struct sockaddr_in*)sa)->sin_addr);
+    }
+
+    return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+int main(void)
+{
+    int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
+    struct addrinfo hints, *servinfo, *p;
+    struct sockaddr_storage their_addr; // connector's address information
+    socklen_t sin_size;
+    struct sigaction sa;
+    int yes=1;
+    char s[INET6_ADDRSTRLEN];
+    int rv;
+
+    //I'll use memset to make sure the struct is empyt
+    memset(&hints, 0, sizeof hints);
+    
+    //I won't specify its IPv4 or IPv6 -- increases portability
+    hints.ai_family = AF_UNSPEC;
+    
+    //TCP stream sockets -- connection oriented, no loss of data, guaranteed order, etc is necessary here
+    hints.ai_socktype = SOCK_STREAM;
+    
+    //Function that will be called later will fill my IP at the appropriated structure, I won't hardcode it!
+    hints.ai_flags = AI_PASSIVE;
+
+    //This method fills in the serverinfo structure using the hints, serverinfo includes a lot of info!
+    
+    /**
+    struct addrinfo {
+        int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
+        int              ai_family;    // AF_INET, AF_INET6, AF_UNSPEC
+        int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
+        int              ai_protocol;  // use 0 for "any"
+        size_t           ai_addrlen;   // size of ai_addr in bytes
+        struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
+        char            *ai_canonname; // full canonical hostname
+
+        struct addrinfo *ai_next;      // linked list, next node
+    };
+    
+    */
+    if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return 1;
+    }
+
+    //The  getaddrinfo returns a linked list with all the results of the data. We run this list looking for the proper server info.
+    //Once we find it, we create a socket in this case tha is AF_UNSPEC, SOCK_STREAM (uses TCP) and the appropriated protocol.
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                p->ai_protocol)) == -1) {
+            perror("server: socket");
+            continue;
+        }
+
+        //Just in case I closed the connection and it complains the connection is already in use, I'll just let my application
+        //knows that I may reuse that port for other data. This ocorred at the python code when I'd suddently close the tic-tac-toe
+        //code. It won't occur here thanks to this, however :-)
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
+                sizeof(int)) == -1) {
+            perror("setsockopt");
+            exit(1);
+        }
+        
+        //Since my generic socket is already set or being reused, and I know the necessary information about it
+        //now I'll give it a port that will be used so that the clients know which process will be listening and waiting for them!
+        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("server: bind");
+            continue;
+        }
+
+        break;
+    }
+
+    //This is the case where while looking for the information obtained by getaddrinfo nothing was found on the servinfo linked list!
+    if (p == NULL)  {
+        fprintf(stderr, "server: failed to bind\n");
+        return 2;
+    }
+
+    //I've already created the socket and bind it, so the serverinfo information is no longer necessary, get ride of it!
+    freeaddrinfo(servinfo); // all done with this structure
+
+    //Now as the server I'll listen (wait for other hosts). Processes who try to estabilish a connection with me will be added
+    //to a queue of received connection requests. The number of hosts waiting in this queue is defined as an int on the BACKLOG
+    //define that I've set on the start of this code!
+    if (listen(sockfd, BACKLOG) == -1) {
+        perror("listen");
+        exit(1);
+    }
+
+    //I'll fork processes that will deal with different hosts. That being said, I'll obviously be a murderer and kill a lot of them!
+    //Well, I don't want zombies messing up my stuff or my sysadmin complaining, so I'll get ride of them now!
+    sa.sa_handler = sigchld_handler; // reap all dead processes
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
+
+    //All set, let the guy who is running me that I'm ready to wait for other hosts!
+    printf("server: waiting for connections...\n");
+
+    //I accept all connections in this loop and deal with them1
+    while(1) {  // main accept() loop
+        sin_size = sizeof their_addr;
+        
+        //Everytime I accept a connection, a new file description (remember! everything on C is a file descriptor)
+        //no matter if it is for network connection, to open I/O Files or w/e is created and will be use to send and 
+        //receive messages from the host on that connection. The original socket created before will still be listening
+        //to other hosts based on the quantity of the backlog. 
+        //Since theyre all file descriptors use open and close to them! 
+        //(well there are better way to get things working around with sockets, check source of this code)
+        
+        new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+        if (new_fd == -1) {
+            perror("accept");
+            continue;
+        }
+
+        //inet_ntop, inet n(network)to p(presentation), converts the ip strucutures to the 255.255.255.255 readable format!
+        inet_ntop(their_addr.ss_family,
+            get_in_addr((struct sockaddr *)&their_addr),
+            s, sizeof s);
+        printf("server: got connection from %s\n", s);
+
+        //As the server, the main process will keep listening, and the children process will deal with each host. 
+        if (!fork()) { // this is the child process
+            close(sockfd); // child doesn't need the listener
+            if (send(new_fd, "Hello, world!", 13, 0) == -1)
+                perror("send");
+            close(new_fd);
+            exit(0);
+        }
+        close(new_fd);  // parent doesn't need this
+    }
+
+    return 0;
+}
