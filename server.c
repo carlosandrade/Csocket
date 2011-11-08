@@ -19,10 +19,12 @@ The main idea is that the program reads an input of numbers from file
 #include <sys/wait.h>
 #include <signal.h>
 
+
+
 #define PORT "3490"  // the port users will be connecting to
 #define MAXDATASIZE 300 // max number of bytes we can get at once 
 
-#define BACKLOG 2     // how many pending connections queue will hold
+//#define BACKLOG 2     // how many pending connections queue will hold
 
 void sigchld_handler(int s)
 {
@@ -41,18 +43,30 @@ void *get_in_addr(struct sockaddr *sa)
 
 
 int decideBucketPosition(int elementoAtual,int numProcessos);
-void splitArrayElementsOnBuckets(int *vetor,int bucket[300][16], int numProcessos, int posicao[16],int numFuncoes);
+void splitArrayElementsOnBuckets(int *vetor,int bucket[300][300], int numProcessos, int posicao[16],int numFuncoes);
 void itoa(int value, char* str, int base);
 void strreverse(char* begin, char* end);
 
-int main(void)
-{
+int main(int argc, char *argv[])
+{ int status; //for waiting children processes
     //For File management
     FILE *fr; 
     
     //For loops
     int i;
     
+    if(argc != 2)
+    {
+        printf("invalid amount of parameters, input: ./a.out 2\n");
+        exit(0);
+    }
+        
+    int BACKLOG = atoi(argv[1]);
+    if(BACKLOG <=1)
+    {
+        printf("invalid number of hosts. min of 2\n");
+        exit(0);
+    }
     
     //I need to start reading the functions from file, here I go..!
 
@@ -69,7 +83,7 @@ int main(void)
     numFuncoes = atoi(numElemen);
     char line[numFuncoes][80];
     int unsort[numFuncoes];
-    int bucket[300][16];
+    int bucket[300][300];
     int j=0;
     while( (fgets(line[j], sizeof(numElemen), fr) != NULL) && j < numFuncoes ) j++;
 
@@ -80,7 +94,7 @@ int main(void)
     //			printf("Posicoes no vetor: %s\n",line[i]);
     for(i=0;i<numFuncoes;i++)
         unsort[i] = atoi(line[i]);
-    //		for(i=0;i<numFuncoes;i++)
+    //  		for(i=0;i<numFuncoes;i++)
     //			printf("%d\n",unsort[i]);
 
     		//para saber o num de elementos de cada bucket
@@ -89,7 +103,9 @@ int main(void)
     
     
     //Up to this point I should have all my buckets ready to be sent to the host computers
-    /*This will print the bucket
+    //This will print the bucket
+    
+    /*
     for(i=0;i<numProcessos;i++)
     {
         for(j=0;j<numElemenBucket[i];j++)
@@ -98,7 +114,7 @@ int main(void)
     */
     
     
-    //exit(0);
+   // exit(0);
     
     
     //Below this point is totally related to estabilish a connection between server and client
@@ -236,12 +252,12 @@ int main(void)
             //Start of test of sending integers
 //            write(new_fd,&numElemenBucket[0],sizeof(numElemenBucket[0])); //Send amount of elements of this bucket
 
-            int32_t bucketAux[300][16];
+            int32_t bucketAux[300][300];
             for(i=0; i<numElemenBucket[bucketShard]; i++)
                bucketAux[bucketShard][i] = htonl((int32_t)(bucket[bucketShard][i]));
                
-            //for(i=0; i<numElemenBucket[bucketShard]; i++)
-              //  printf("valor em int antes da conversao: %d\n",bucket[bucketShard][i]);
+           // for(i=0; i<numElemenBucket[bucketShard]; i++)
+             //   printf("valor em int antes da conversao: %d\n",bucket[bucketShard][i]);
             
             //End of test of sending integers
             
@@ -286,13 +302,20 @@ int main(void)
         //Do notice that the max number of buckets is always the same amount of hosts that the server will wait 
         //to receive a message. That way, each host always gets a bucket shard, nothing less and nothing more.
     }
+    int waitOnForkChildren = BACKLOG;
+    while(waitOnForkChildren > 0)
+    {
+        wait(&status);
+        waitOnForkChildren--;
+    }
     
+    printf("fin\n");
 
     return 0;
 }
 
 
-void splitArrayElementsOnBuckets(int *vetor,int bucket[300][16], int numProcessos, int posicao[16],int numFuncoes)
+void splitArrayElementsOnBuckets(int *vetor,int bucket[300][300], int numProcessos, int posicao[16],int numFuncoes)
 {int i,j;
 	int posicaoBucket;
 	
