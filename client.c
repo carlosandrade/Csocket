@@ -173,7 +173,8 @@ int main(int argc, char *argv[])
     end = get_time(start_time);   
 
     //sizeofmybucket,time in miliseconds
-            printf("\t%d\t%f\n",(int)sizeof(int32_t)*(int)(numbytes/sizeof(int32_t)),(float)(end-start)/1000);
+            printf("\tn_elem\ttime_in_ms\n",(int)(numbytes/sizeof(int32_t)),(float)(end-start)/1000);
+            printf("\t%d\t%f\n",(int)(numbytes/sizeof(int32_t)),(float)(end-start)/1000);
 
     return 0;
 }

@@ -74,9 +74,11 @@ int main(int argc, char *argv[])
       init_time(&start_time);
 
       //time
-      int long long start,end;
+      int long long start1,end1; //This pair measures how long it takes to do get the data ready, but it halts measuring
+      //before it starts waiting for the connection
+    
       
-      start = get_time(start_time);   
+      start1 = get_time(start_time);   
       
     
     if(argc != 2)
@@ -91,6 +93,9 @@ int main(int argc, char *argv[])
         printf("invalid number of hosts. min of 2\n");
         exit(0);
     }
+      int long long startEnd[BACKLOG][2]; //For every backlog, we shall take a start end pair that starts measuring time
+      //as soon as it accepts the connection and ends as soon as it ends the connection to the host
+      //this way time measurement will ignory how long human reactions takes to obtain the time
     
     //I need to start reading the functions from file, here I go..!
 
@@ -245,6 +250,11 @@ int main(int argc, char *argv[])
     //printf("server: waiting for connections...\n"); 
     int bucketShard = 0;
     //I accept all connections in this loop and deal with them1
+    
+    end1 = get_time(start_time); 
+    
+    printf("\tpid\ttime_in_ms\n");
+    
     while(bucketShard<BACKLOG) {  // main accept() loop 
         sin_size = sizeof their_addr;
         
@@ -271,6 +281,7 @@ int main(int argc, char *argv[])
 
         //As the server, the main process will keep listening, and the children process will deal with each host. 
         if (!fork()) { // this is the child process
+            startEnd[bucketShard][0] = get_time(start_time);   
             close(sockfd); // child doesn't need the listener
             
             //Start of test of sending integers
@@ -295,6 +306,7 @@ int main(int argc, char *argv[])
             //Now each process will wait for the data to be sent back to them:
             if ((numbytes = recv(new_fd, bucketAux[bucketShard], MAXDATASIZE-1, 0)) == -1) {
                 perror("recv");
+                
                 exit(1);
             }
             
@@ -316,7 +328,10 @@ int main(int argc, char *argv[])
                   printf("%s\n",convertor);
               }
  */           
-                
+              startEnd[bucketShard][1] = get_time(start_time);
+
+            //number of children process, time taken to collect data
+            printf("\t%d\t%f\n",bucketShard,(float)(startEnd[bucketShard][1]-startEnd[bucketShard][0])/1000);    
             close(new_fd);
             exit(0);
         }
@@ -336,10 +351,12 @@ int main(int argc, char *argv[])
     
     //printf("fin\n");
 
-    end = get_time(start_time);   
+  
     
     //Time nhosts, sizefile,time in miliseconds
-         printf("\t%d\t%d\t%f\n",BACKLOG,numFuncoes,(float)(end-start)/1000);
+    printf("\n"); //just to separate from each children process measurement
+    printf("\tn_hosts\tn_elem\ttime_in_ms\n");
+    printf("\t%d\t%d\t%f\n",BACKLOG,numFuncoes,(float)(end1-start1)/1000);
     
     return 0;
 }
