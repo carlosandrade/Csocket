@@ -1,5 +1,9 @@
 /*
 ** server.c -- a stream socket server demo
+
+This application will implement a distributed system bucket sort. 
+
+The main idea is that the program reads an input of numbers from file 
 */
 
 #include <stdio.h>
@@ -34,8 +38,70 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+
+int decideBucketPosition(int elementoAtual,int numProcessos);
+void splitArrayElementsOnBuckets(int *vetor,int bucket[300][16], int numProcessos, int posicao[16],int numFuncoes);
+
+
 int main(void)
 {
+    //For File management
+    FILE *fr; 
+    
+    //For loops
+    int i;
+    
+    
+    //I need to start reading the functions from file, here I go..!
+
+
+    		if(!(fr=fopen("randomInput.txt", "rt")))  /* open the file for reading */
+    		{
+    			printf("Error! Couldn't open file!\n");
+    		  	exit(1);	
+    		}
+    	   	int numFuncoes,numProcessos=BACKLOG;
+    	   	char numElemen[100];
+
+    		fgets(numElemen, sizeof(numElemen), fr);
+    		numFuncoes = atoi(numElemen);
+    		char line[numFuncoes][80];
+    		int unsort[numFuncoes];
+    		int bucket[300][16];
+    		int j=0;
+    	 	while( (fgets(line[j], sizeof(numElemen), fr) != NULL) && j < numFuncoes ) j++;
+
+    		fclose(fr);  /* close the file prior to exiting the routine */
+
+
+    //		for(i=0;i<numFuncoes;i++)
+    //			printf("Posicoes no vetor: %s\n",line[i]);
+    		for(i=0;i<numFuncoes;i++)
+    			unsort[i] = atoi(line[i]);
+    //		for(i=0;i<numFuncoes;i++)
+    //			printf("%d\n",unsort[i]);
+
+    		//para saber o num de elementos de cada bucket
+    		int numElemenBucket[numProcessos];
+    		splitArrayElementsOnBuckets(unsort,bucket,numProcessos,numElemenBucket,numFuncoes);
+    
+    
+            //Up to this point I should have all my buckets ready to be sent to the host computers
+    
+            for(i=0;i<numProcessos;i++)
+            {
+                for(j=0;j<numElemenBucket[i];j++)
+                    printf("bucket[%d][%d] = %d\n",i,j,bucket[i][j]);
+            }
+    
+            exit(0);
+    
+    
+    
+    
+    
+    //Below this point is totally related to estabilish a connection between server and client
+    
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
     struct addrinfo hints, *servinfo, *p;
     struct sockaddr_storage their_addr; // connector's address information
@@ -172,4 +238,47 @@ int main(void)
     }
 
     return 0;
+}
+
+
+void splitArrayElementsOnBuckets(int *vetor,int bucket[300][16], int numProcessos, int posicao[16],int numFuncoes)
+{int i,j;
+	int posicaoBucket;
+	
+	for(i=0;i<numProcessos;i++)
+		posicao[i] = 0;
+	
+    for(i = 0; i<numFuncoes;i++)
+	{
+		posicaoBucket = decideBucketPosition(vetor[i],numProcessos);
+		bucket[posicaoBucket][posicao[posicaoBucket]] = vetor[i];
+		posicao[posicaoBucket]++;
+	}
+}
+
+int decideBucketPosition(int elementoAtual,int numProcessos)
+{
+	int i=0;
+	    if(elementoAtual == 0)
+	        return numProcessos/2;
+
+	    int elementoAtualEmModulo = elementoAtual;
+
+	    if(elementoAtualEmModulo<0)
+	        elementoAtualEmModulo = elementoAtualEmModulo*-1;
+
+	    for(;i<(numProcessos/2);i++)
+	    {
+	        if(elementoAtualEmModulo < ((5000/((float)numProcessos/2))*(i+1)))
+	        {
+	            if(elementoAtual < 0)
+	                return((numProcessos/2) - (i+1));
+	            else
+	                return((numProcessos/2) + i);
+	        }
+	    }
+	    if(elementoAtual < 0)
+	        return (numProcessos/2 - i); 
+	    else
+	        return((numProcessos/2) + i-1); //So ocorre quando elemento igual a 5000	
 }
