@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     char convertor[100];
     
     int aux;
-    for(i=0;i<numbytes;i++)
+    for(i=0;i<(numbytes/sizeof(int32_t));i++)
     {   aux  = (int)buf[i];
         itoa(aux,convertor,10);
         printf("%s\n",convertor);

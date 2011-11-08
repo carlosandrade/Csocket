@@ -87,13 +87,13 @@ int main(void)
     
     
     //Up to this point I should have all my buckets ready to be sent to the host computers
-    
+    /*This will print the bucket
     for(i=0;i<numProcessos;i++)
     {
         for(j=0;j<numElemenBucket[i];j++)
             printf("bucket[%d][%d] = %d\n",i,j,bucket[i][j]);
     }
-    
+    */
     
     
     //exit(0);
@@ -235,11 +235,14 @@ int main(void)
             int32_t bucketAux[300][16];
             for(i=0; i<numElemenBucket[0]; i++)
                bucketAux[0][i] = htonl((int32_t)(bucket[0][i]));
+               
+           // for(i=0; i<numElemenBucket[0]; i++)
+               // printf("valor em int32_t: %d\n",bucket[0][i]);
             
             //End of test of sending integers
             
-            //if (send(new_fd, "Hello, world!", 13, 0) == -1)
-            if (send(new_fd,bucket[0],sizeof(int32_t)*numElemenBucket[0], 0) == -1)
+            
+            if (send(new_fd,bucketAux[0],sizeof(int32_t)*numElemenBucket[0], 0) == -1)
                 perror("send");
             close(new_fd);
             exit(0);
