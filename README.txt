@@ -3,7 +3,7 @@ This code implements a distributed bucketsort.
 1. Server starts requesting for number of H hosts to be connected to server using server.c.
 	1.1 Server uses a function to create H buckets, each of them will be sent to one of the hosts.
 	1.2 Server waits for each bucket connection.
-		Obs: Last time measurement output on server host includes only 1.1, it doesnt counts 1.2
+		Obs: Last time measurement output on server host includes only 1.1, it doesn't counts 1.2
 2. Client hosts start connection using client.c 
 	2.1 Client request bucket to server
 	2.2 Client waits for bucket 
@@ -29,11 +29,11 @@ Credits:
 	
 Experimental Section--
 
-Altough code lacks a lot of parts that requires improvents: e.g., Many casts are used, unnecessary loops, call for functions to maintain portability (local host to network and vice-versa), etc I've adapted the code to print the time outputs in case code gets improved for real measurement.
+Although code has a lot of parts that requires improvements: e.g., Many casts are used, unnecessary loops, call for functions to maintain portability (local host to network and vice-versa), etc I've adapted the code to print the time outputs in case code gets improved for real measurement.
 
 Just for illustrative purposes, here are data obtained from few experimental tests:
 
-(Pay tention to input order from each terminal window)
+(Pay attention to input order from each terminal window)
 
 undine:Csocket carlosviansi$ ./server 2
 	pid	time_in_ms
