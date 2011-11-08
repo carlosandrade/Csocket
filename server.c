@@ -94,10 +94,9 @@ int main(void)
             printf("bucket[%d][%d] = %d\n",i,j,bucket[i][j]);
     }
     
-    exit(0);
     
     
-    
+    //exit(0);
     
     
     //Below this point is totally related to estabilish a connection between server and client
@@ -229,7 +228,18 @@ int main(void)
         //As the server, the main process will keep listening, and the children process will deal with each host. 
         if (!fork()) { // this is the child process
             close(sockfd); // child doesn't need the listener
-            if (send(new_fd, "Hello, world!", 13, 0) == -1)
+            
+            //Start of test of sending integers
+//            write(new_fd,&numElemenBucket[0],sizeof(numElemenBucket[0])); //Send amount of elements of this bucket
+
+            int32_t bucketAux[300][16];
+            for(i=0; i<numElemenBucket[0]; i++)
+               bucketAux[0][i] = htonl((int32_t)(bucket[0][i]));
+            
+            //End of test of sending integers
+            
+            //if (send(new_fd, "Hello, world!", 13, 0) == -1)
+            if (send(new_fd,bucket[0],sizeof(int32_t)*numElemenBucket[0], 0) == -1)
                 perror("send");
             close(new_fd);
             exit(0);

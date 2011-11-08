@@ -16,7 +16,7 @@
 
 #define PORT "3490" // the port client will be connecting to 
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXDATASIZE 300 // max number of bytes we can get at once 
 
 // get sockaddr, IPv4 or IPv6:
 
@@ -30,10 +30,12 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+void itoa(int value, char* str, int base);
+
 int main(int argc, char *argv[])
 {
     int sockfd, numbytes;  
-    char buf[MAXDATASIZE];
+    int32_t buf[MAXDATASIZE];
     struct addrinfo hints, *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
@@ -96,11 +98,89 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    buf[numbytes] = '\0';
-
-    printf("client: received '%s'\n",buf);
+//    buf[numbytes] = '\0';
+    
+    int i;
+    for(i=0;i<numbytes;i++)
+        buf[i] = ntohl(buf[i]);
+        
+    char convertor[100];
+    
+    int aux;
+    for(i=0;i<numbytes;i++)
+    {   aux  = (int)buf[i];
+        itoa(aux,convertor,10);
+        printf("%s\n",convertor);
+    }
+        
+      
+//    printf("client: received '%s'\n",buf);
 
     close(sockfd);
 
     return 0;
+}
+
+/**
+	
+ * Ansi C "itoa" based on Kernighan & Ritchie's "Ansi C"
+	
+ * with slight modification to optimize for specific architecture:
+	
+ */
+	
+void strreverse(char* begin, char* end) {
+	
+	char aux;
+	
+	while(end>begin)
+	
+		aux=*end, *end--=*begin, *begin++=aux;
+	
+}
+	
+void itoa(int value, char* str, int base) {
+	
+	static char num[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+	
+	char* wstr=str;
+	
+	int sign;
+	
+	div_t res;
+	
+
+	
+	// Validate base
+	
+	if (base<2 || base>35){ *wstr='\0'; return; }
+	
+
+	
+	// Take care of sign
+	
+	if ((sign=value) < 0) value = -value;
+	
+
+	
+	// Conversion. Number is reversed.
+	
+	do {
+	
+		res = div(value,base);
+	
+		*wstr++ = num[res.rem];
+	
+	}while(value=res.quot);
+	
+	if(sign<0) *wstr++='-';
+	
+	*wstr='\0';
+	
+
+	
+	// Reverse string
+	
+	strreverse(str,wstr-1);
+	
 }
