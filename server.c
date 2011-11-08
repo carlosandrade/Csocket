@@ -20,6 +20,7 @@ The main idea is that the program reads an input of numbers from file
 #include <signal.h>
 
 #define PORT "3490"  // the port users will be connecting to
+#define MAXDATASIZE 300 // max number of bytes we can get at once 
 
 #define BACKLOG 2     // how many pending connections queue will hold
 
@@ -41,7 +42,8 @@ void *get_in_addr(struct sockaddr *sa)
 
 int decideBucketPosition(int elementoAtual,int numProcessos);
 void splitArrayElementsOnBuckets(int *vetor,int bucket[300][16], int numProcessos, int posicao[16],int numFuncoes);
-
+void itoa(int value, char* str, int base);
+void strreverse(char* begin, char* end);
 
 int main(void)
 {
@@ -238,14 +240,43 @@ int main(void)
             for(i=0; i<numElemenBucket[bucketShard]; i++)
                bucketAux[bucketShard][i] = htonl((int32_t)(bucket[bucketShard][i]));
                
-            for(i=0; i<numElemenBucket[bucketShard]; i++)
-                printf("valor em int antes da conversao: %d\n",bucket[bucketShard][i]);
+            //for(i=0; i<numElemenBucket[bucketShard]; i++)
+              //  printf("valor em int antes da conversao: %d\n",bucket[bucketShard][i]);
             
             //End of test of sending integers
             
             
             if (send(new_fd,bucketAux[bucketShard],sizeof(int32_t)*numElemenBucket[bucketShard], 0) == -1)
                 perror("send");
+                
+                
+            int numbytes;   
+            //At this point all hosts should have requested the bucket data and started sorting it. 
+            //Now each process will wait for the data to be sent back to them:
+            if ((numbytes = recv(new_fd, bucketAux[bucketShard], MAXDATASIZE-1, 0)) == -1) {
+                perror("recv");
+                exit(1);
+            }
+            
+            
+            //Convert back to this computer architecture for portability
+            for(i=0;i<(numbytes/sizeof(int32_t));i++)
+                  bucketAux[bucketShard][i] = ntohl(bucketAux[bucketShard][i]);
+            
+            
+              printf("Im the server child process in charge of receiving the bucket shard %d.\n",bucketShard);
+              
+              char convertor[100];
+
+              int aux;
+
+              for(i=0;i<(numbytes/sizeof(int32_t));i++)
+              {   aux  = (int)bucketAux[bucketShard][i];
+                  itoa(aux,convertor,10);
+                  printf("%s\n",convertor);
+              }
+            
+                
             close(new_fd);
             exit(0);
         }
@@ -255,6 +286,7 @@ int main(void)
         //Do notice that the max number of buckets is always the same amount of hosts that the server will wait 
         //to receive a message. That way, each host always gets a bucket shard, nothing less and nothing more.
     }
+    
 
     return 0;
 }
@@ -300,4 +332,59 @@ int decideBucketPosition(int elementoAtual,int numProcessos)
 	        return (numProcessos/2 - i); 
 	    else
 	        return((numProcessos/2) + i-1); //So ocorre quando elemento igual a 5000	
+}
+
+void itoa(int value, char* str, int base) {
+	
+	static char num[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+	
+	char* wstr=str;
+	
+	int sign;
+	
+	div_t res;
+	
+
+	
+	// Validate base
+	
+	if (base<2 || base>35){ *wstr='\0'; return; }
+	
+
+	
+	// Take care of sign
+	
+	if ((sign=value) < 0) value = -value;
+	
+
+	
+	// Conversion. Number is reversed.
+	
+	do {
+	
+		res = div(value,base);
+	
+		*wstr++ = num[res.rem];
+	
+	}while(value=res.quot);
+	
+	if(sign<0) *wstr++='-';
+	
+	*wstr='\0';
+	
+
+	
+	// Reverse string
+	
+	strreverse(str,wstr-1);
+	
+}
+void strreverse(char* begin, char* end) {
+	
+	char aux;
+	
+	while(end>begin)
+	
+		aux=*end, *end--=*begin, *begin++=aux;
+	
 }

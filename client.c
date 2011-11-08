@@ -32,6 +32,7 @@ void *get_in_addr(struct sockaddr *sa)
 
 void itoa(int value, char* str, int base);
 void insertionSort(int v[], int tam);
+void strreverse(char* begin, char* end);
 
 int main(int argc, char *argv[])
 {
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
 //    buf[numbytes] = '\0';
     
     int i;
-    for(i=0;i<numbytes;i++)
+    for(i=0;i<(numbytes/sizeof(int32_t));i++)
         buf[i] = ntohl(buf[i]);
         
     char convertor[100];
@@ -127,6 +128,18 @@ int main(int argc, char *argv[])
         printf("%s\n",convertor);
     }
 */
+
+    printf("ola2?\n");
+
+
+    for(i=0;i<(numbytes/sizeof(int32_t));i++)
+        buf[i] = htonl(buf[i]);
+        
+    printf("ola?\n");
+
+    //Send the sorted bucket back to the server
+  if (send(sockfd,buf,sizeof(int32_t)*(numbytes/sizeof(int32_t)), 0) == -1)
+        perror("send");
 
 
     close(sockfd);
