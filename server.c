@@ -26,6 +26,20 @@ The main idea is that the program reads an input of numbers from file
 
 //#define BACKLOG 2     // how many pending connections queue will hold
 
+
+void init_time(struct timeval *start_time) {
+//time_t start_time;    
+gettimeofday(start_time, NULL);
+}
+
+long long int get_time(struct timeval start_time) {
+struct timeval t;
+gettimeofday(&t, NULL);
+return (long long int) (t.tv_sec - start_time.tv_sec) * 1000000
++ (t.tv_usec - 
+start_time.tv_usec);
+}
+
 void sigchld_handler(int s)
 {
     while(waitpid(-1, NULL, WNOHANG) > 0);
@@ -54,6 +68,16 @@ int main(int argc, char *argv[])
     
     //For loops
     int i;
+    
+    //For time measurement
+    struct timeval start_time;
+      init_time(&start_time);
+
+      //time
+      int long long start,end;
+      
+      start = get_time(start_time);   
+      
     
     if(argc != 2)
     {
@@ -312,6 +336,11 @@ int main(int argc, char *argv[])
     
     //printf("fin\n");
 
+    end = get_time(start_time);   
+    
+    //Time nhosts, sizefile,time in miliseconds
+         printf("\t%d\t%d\t%f\n",BACKLOG,numFuncoes,(float)(end-start)/1000);
+    
     return 0;
 }
 
